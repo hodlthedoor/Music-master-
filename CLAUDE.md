@@ -7,6 +7,7 @@ This document provides guidance for AI assistants working on this codebase.
 **Repository:** Music-master-
 **Type:** Synth Loop & Percussion Beats UI Application
 **Platform:** Web-based (Browser), Responsive Design
+**Live Demo:** [Vercel Deployment](https://music-master.vercel.app)
 
 A browser-based music creation application featuring synthesizer loops, percussion/drum beat sequencing, and a professional mixer interface. Users can create, layer, and arrange synth patterns alongside drum beats through an intuitive, responsive visual interface that works on desktop and mobile devices.
 
@@ -428,6 +429,63 @@ function updateMeter() {
 - Efficient DOM updates (don't re-render on every tick)
 - Consider Web Worker for timing stability
 - Use `will-change` sparingly for animated elements
+
+## Deployment
+
+### Vercel
+
+This project is deployed on [Vercel](https://vercel.com).
+
+**Live URL:** https://music-master.vercel.app
+
+#### Vercel Configuration
+
+```json
+// vercel.json (if needed)
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}
+```
+
+#### Deployment Steps
+
+1. **Connect Repository:** Link GitHub repo to Vercel dashboard
+2. **Configure Build:**
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+3. **Environment Variables:** Add any required env vars in Vercel dashboard
+4. **Deploy:** Push to `main` branch triggers automatic deployment
+
+#### Preview Deployments
+
+- Every pull request gets a unique preview URL
+- Preview URLs follow pattern: `music-master-<hash>-<team>.vercel.app`
+- Use previews to test changes before merging
+
+#### Vercel CLI (Optional)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+#### Audio Considerations for Deployment
+
+- Ensure audio files are in `public/` or `assets/` for proper bundling
+- Use relative paths for sample loading
+- Test AudioContext initialization on deployed version (HTTPS required for some features)
 
 ---
 
