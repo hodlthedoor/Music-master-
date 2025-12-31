@@ -1,0 +1,28 @@
+.mixer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mixer-channels {
+  display: flex;
+  gap: var(--spacing-sm);
+  min-width: fit-content;
+  padding-bottom: var(--spacing-sm);
+}
+
+.mixer-divider {
+  width: 2px;
+  background: var(--color-bg-tertiary);
+  margin: 0 var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .mixer-channels {
+    gap: var(--spacing-md);
+  }
+
+  .mixer-divider {
+    margin: 0 var(--spacing-md);
+  }
+}

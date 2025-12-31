@@ -1,0 +1,121 @@
+.sequencer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sequencer-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: fit-content;
+}
+
+.sequencer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.row-label {
+  width: 60px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: var(--spacing-sm);
+}
+
+.header-row .row-label {
+  visibility: hidden;
+}
+
+.step-number {
+  width: var(--step-size);
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.step-number.current {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.step {
+  width: var(--step-size);
+  height: var(--step-size);
+  border-radius: var(--radius-sm);
+  background: var(--color-step-inactive);
+  flex-shrink: 0;
+  transition: all 0.1s ease;
+  touch-action: manipulation;
+}
+
+.step.beat-start {
+  border-left: 2px solid var(--color-bg-tertiary);
+}
+
+.step:hover {
+  background: var(--color-surface);
+  transform: scale(1.05);
+}
+
+.step.active {
+  background: var(--color-step-active);
+  box-shadow: 0 0 10px var(--color-step-active);
+}
+
+.synth-row .step.active {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+.drum-row .step.active {
+  background: var(--color-accent-secondary);
+  box-shadow: 0 0 10px var(--color-accent-secondary);
+}
+
+.step.current {
+  border: 2px solid var(--color-step-current);
+}
+
+.step.current.active {
+  background: var(--color-step-current);
+  box-shadow: 0 0 15px var(--color-step-current);
+}
+
+/* Mobile: smaller steps */
+@media (max-width: 767px) {
+  :root {
+    --step-size: 32px;
+  }
+
+  .row-label {
+    width: 50px;
+    font-size: 0.625rem;
+  }
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  :root {
+    --step-size: 40px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 992px) {
+  :root {
+    --step-size: 44px;
+  }
+
+  .row-label {
+    width: 80px;
+    font-size: 0.875rem;
+  }
+}

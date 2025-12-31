@@ -1,0 +1,168 @@
+.synth-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.control-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.waveform-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.waveform-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.waveform-btn:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.waveform-btn.active {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.waveform-btn span {
+  font-size: 0.625rem;
+  text-transform: capitalize;
+}
+
+.waveform-icon {
+  width: 32px;
+  height: 16px;
+}
+
+.note-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.note-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 1.25rem;
+}
+
+.note-btn:hover {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.note-display {
+  min-width: 50px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.test-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-accent-secondary);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.test-btn:hover {
+  filter: brightness(1.2);
+}
+
+.adsr-controls,
+.filter-controls {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.adsr-knob,
+.filter-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 60px;
+}
+
+.adsr-knob input,
+.filter-knob input {
+  width: 100%;
+  height: 6px;
+}
+
+.adsr-knob input::-webkit-slider-thumb,
+.filter-knob input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  margin-top: -5px;
+}
+
+.adsr-knob input::-webkit-slider-runnable-track,
+.filter-knob input::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--color-surface);
+  border-radius: 3px;
+}
+
+.knob-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.knob-value {
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .waveform-buttons {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .waveform-btn {
+    padding: var(--spacing-md);
+  }
+
+  .waveform-icon {
+    width: 40px;
+    height: 20px;
+  }
+
+  .adsr-knob,
+  .filter-knob {
+    min-width: 70px;
+  }
+}

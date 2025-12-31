@@ -1,0 +1,140 @@
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+}
+
+.transport-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.transport-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.transport-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.transport-btn:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
+}
+
+.play-btn.active {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.play-btn.active:hover {
+  background: var(--color-accent-dim);
+}
+
+.bpm-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.bpm-label {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.bpm-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.bpm-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bpm-btn:hover {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.bpm-input {
+  width: 60px;
+  height: 32px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.bpm-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.bpm-slider {
+  width: 150px;
+  height: 4px;
+}
+
+.bpm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+.bpm-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--color-surface);
+  border-radius: 2px;
+}
+
+@media (min-width: 768px) {
+  .transport {
+    gap: var(--spacing-xl);
+  }
+
+  .transport-btn {
+    width: 70px;
+    height: 70px;
+  }
+
+  .transport-btn svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .bpm-slider {
+    width: 200px;
+  }
+}

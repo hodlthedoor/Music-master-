@@ -1,0 +1,65 @@
+.drum-pads {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.drum-pad {
+  aspect-ratio: 1;
+  min-height: var(--pad-size);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  transition: all 0.1s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.drum-pad:hover {
+  background: var(--color-bg-tertiary);
+  transform: scale(1.02);
+}
+
+.drum-pad:active {
+  background: var(--color-accent-secondary);
+  transform: scale(0.95);
+  box-shadow: 0 0 20px var(--color-accent-secondary);
+}
+
+.pad-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.pad-key {
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  background: var(--color-bg-primary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+@media (min-width: 576px) {
+  .drum-pads {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .drum-pad {
+    min-height: 80px;
+  }
+
+  .pad-name {
+    font-size: 1rem;
+  }
+
+  .pad-key {
+    font-size: 0.75rem;
+  }
+}
