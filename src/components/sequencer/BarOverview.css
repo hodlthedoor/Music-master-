@@ -1,0 +1,214 @@
+.bar-overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-sm);
+}
+
+.bar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+/* Length Selector */
+.length-selector {
+  position: relative;
+}
+
+.length-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.length-btn:hover {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.length-icon {
+  font-size: 1rem;
+}
+
+.dropdown-arrow {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.length-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--spacing-xs);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.length-option {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  color: var(--color-text);
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.length-option:hover {
+  background: var(--color-surface);
+}
+
+.length-option.active {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+/* Bar Actions */
+.bar-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.bar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--color-text);
+  transition: all 0.15s ease;
+}
+
+.bar-action-btn:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+.bar-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bar-action-btn.danger:hover:not(:disabled) {
+  background: #ff4757;
+}
+
+.action-icon {
+  font-size: 0.875rem;
+}
+
+.action-label {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .action-label {
+    display: inline;
+  }
+}
+
+/* Bar Indicators */
+.bar-indicators {
+  display: flex;
+  gap: var(--spacing-xs);
+  overflow-x: auto;
+  padding: var(--spacing-xs) 0;
+}
+
+.bar-indicator {
+  flex: 1;
+  min-width: 60px;
+  max-width: 120px;
+  padding: var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-indicator:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-accent-dim);
+}
+
+.bar-indicator.selected {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 15%, var(--color-surface));
+}
+
+.bar-indicator.playing {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.bar-indicator.playing .bar-number {
+  color: var(--color-accent);
+}
+
+.bar-number {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.bar-progress {
+  height: 4px;
+  background: var(--color-bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.05s linear;
+}
+
+/* Bar Hint */
+.bar-hint {
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .bar-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bar-actions {
+    justify-content: center;
+  }
+
+  .bar-indicator {
+    min-width: 50px;
+  }
+}
