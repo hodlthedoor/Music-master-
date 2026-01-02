@@ -1,6 +1,28 @@
 .sequencer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sequencer-scroll-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-bg-tertiary);
+}
+
+.sequencer-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.sequencer-scroll-container::-webkit-scrollbar-track {
+  background: var(--color-bg-tertiary);
+  border-radius: 4px;
+}
+
+.sequencer-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 4px;
 }
 
 .sequencer-grid {
@@ -26,6 +48,14 @@
   padding-right: var(--spacing-sm);
 }
 
+.sticky-label {
+  position: sticky;
+  left: 0;
+  background: var(--color-bg-primary);
+  z-index: 10;
+  padding-left: var(--spacing-xs);
+}
+
 .header-row .row-label {
   visibility: hidden;
 }
@@ -46,6 +76,25 @@
   font-weight: 600;
 }
 
+.step-number.bar-start {
+  color: var(--color-text);
+  font-weight: 700;
+  position: relative;
+}
+
+.step-number.bar-start::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--color-accent);
+}
+
 .step {
   width: var(--step-size);
   height: var(--step-size);
@@ -58,6 +107,10 @@
 
 .step.beat-start {
   border-left: 2px solid var(--color-bg-tertiary);
+}
+
+.step.bar-start {
+  border-left: 3px solid var(--color-accent-dim);
 }
 
 .step:hover {
@@ -87,6 +140,15 @@
 .step.current.active {
   background: var(--color-step-current);
   box-shadow: 0 0 15px var(--color-step-current);
+}
+
+/* Scroll hint */
+.scroll-hint {
+  text-align: center;
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  padding: var(--spacing-xs) 0;
+  opacity: 0.7;
 }
 
 /* Mobile: smaller steps */

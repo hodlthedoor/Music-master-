@@ -5,6 +5,7 @@ import { patternStorage, SavedPattern } from './state/PatternStorage';
 import { generatePattern, GeneratedPattern } from './utils/PatternGenerator';
 import Transport from './components/transport/Transport';
 import Sequencer from './components/sequencer/Sequencer';
+import BarOverview from './components/sequencer/BarOverview';
 import Mixer from './components/mixer/Mixer';
 import SynthControls from './components/synth/SynthControls';
 import DrumMachine from './components/drums/DrumMachine';
@@ -22,6 +23,9 @@ function App() {
   const [synthPattern, setSynthPattern] = useState<boolean[]>(new Array(16).fill(false));
   const [drumPatterns, setDrumPatterns] = useState<boolean[][]>([]);
   const [synthNote, setSynthNote] = useState(55);
+  const [patternLength, setPatternLength] = useState(16);
+  const [selectedBars, setSelectedBars] = useState<number[]>([]);
+  const [copiedBars, setCopiedBars] = useState<{ synth: boolean[]; drums: boolean[][] } | null>(null);
 
   const isInitialLoad = useRef(true);
   const lastSaveTime = useRef(0);
@@ -263,8 +267,8 @@ function App() {
 
   // Clear all patterns
   const handleClearAll = () => {
-    const emptyPattern = new Array(16).fill(false);
-    const emptyDrums = drumPatterns.map(() => new Array(16).fill(false));
+    const emptyPattern = new Array(patternLength).fill(false);
+    const emptyDrums = drumPatterns.map(() => new Array(patternLength).fill(false));
 
     handleSynthPatternChange(emptyPattern);
     emptyDrums.forEach((p, i) => {
@@ -276,6 +280,163 @@ function App() {
   const handleRandomize = () => {
     const pattern = generatePattern('random');
     handleApplyPattern(pattern);
+  };
+
+  // Pattern length change
+  const handlePatternLengthChange = (newLength: number) => {
+    setPatternLength(newLength);
+    audioEngine.setPatternLength(newLength);
+
+    // Extend patterns if needed
+    if (synthPattern.length < newLength) {
+      const extended = [...synthPattern, ...new Array(newLength - synthPattern.length).fill(false)];
+      setSynthPattern(extended);
+      audioEngine.setSynthPattern(extended);
+    }
+
+    const newDrumPatterns = drumPatterns.map(pattern => {
+      if (pattern.length < newLength) {
+        return [...pattern, ...new Array(newLength - pattern.length).fill(false)];
+      }
+      return pattern;
+    });
+    setDrumPatterns(newDrumPatterns);
+    newDrumPatterns.forEach((p, i) => audioEngine.setDrumPattern(i, p));
+  };
+
+  // Bar selection
+  const handleBarSelect = (barIndex: number, multiSelect: boolean) => {
+    if (multiSelect) {
+      setSelectedBars(prev =>
+        prev.includes(barIndex)
+          ? prev.filter(b => b !== barIndex)
+          : [...prev, barIndex].sort((a, b) => a - b)
+      );
+    } else {
+      setSelectedBars([barIndex]);
+    }
+  };
+
+  // Insert bar after a position
+  const handleInsertBar = (afterBar: number) => {
+    if (patternLength >= 128) return;
+
+    const insertAt = (afterBar + 1) * 16;
+    const newLength = patternLength + 16;
+
+    // Insert empty steps for synth
+    const newSynth = [
+      ...synthPattern.slice(0, insertAt),
+      ...new Array(16).fill(false),
+      ...synthPattern.slice(insertAt),
+    ];
+
+    // Insert empty steps for drums
+    const newDrums = drumPatterns.map(pattern => [
+      ...pattern.slice(0, insertAt),
+      ...new Array(16).fill(false),
+      ...pattern.slice(insertAt),
+    ]);
+
+    setPatternLength(newLength);
+    setSynthPattern(newSynth);
+    setDrumPatterns(newDrums);
+    audioEngine.setPatternLength(newLength);
+    audioEngine.setSynthPattern(newSynth);
+    newDrums.forEach((p, i) => audioEngine.setDrumPattern(i, p));
+  };
+
+  // Delete selected bars
+  const handleDeleteBars = (bars: number[]) => {
+    if (patternLength <= 16 || bars.length === 0) return;
+
+    const sortedBars = [...bars].sort((a, b) => b - a); // Delete from end first
+    let newSynth = [...synthPattern];
+    let newDrums = drumPatterns.map(p => [...p]);
+
+    for (const barIndex of sortedBars) {
+      const start = barIndex * 16;
+      newSynth = [...newSynth.slice(0, start), ...newSynth.slice(start + 16)];
+      newDrums = newDrums.map(p => [...p.slice(0, start), ...p.slice(start + 16)]);
+    }
+
+    const newLength = Math.max(16, patternLength - bars.length * 16);
+
+    setPatternLength(newLength);
+    setSynthPattern(newSynth);
+    setDrumPatterns(newDrums);
+    setSelectedBars([]);
+    audioEngine.setPatternLength(newLength);
+    audioEngine.setSynthPattern(newSynth);
+    newDrums.forEach((p, i) => audioEngine.setDrumPattern(i, p));
+  };
+
+  // Copy selected bars
+  const handleCopyBars = (bars: number[]) => {
+    const sortedBars = [...bars].sort((a, b) => a - b);
+    let copiedSynth: boolean[] = [];
+    let copiedDrums: boolean[][] = drumPatterns.map(() => []);
+
+    for (const barIndex of sortedBars) {
+      const start = barIndex * 16;
+      copiedSynth = [...copiedSynth, ...synthPattern.slice(start, start + 16)];
+      drumPatterns.forEach((pattern, i) => {
+        copiedDrums[i] = [...copiedDrums[i], ...pattern.slice(start, start + 16)];
+      });
+    }
+
+    setCopiedBars({ synth: copiedSynth, drums: copiedDrums });
+  };
+
+  // Paste bars after a position
+  const handlePasteBars = (afterBar: number) => {
+    if (!copiedBars) return;
+
+    const insertAt = (afterBar + 1) * 16;
+    const barsToAdd = copiedBars.synth.length / 16;
+    const newLength = Math.min(128, patternLength + barsToAdd * 16);
+
+    if (newLength > 128) return;
+
+    const newSynth = [
+      ...synthPattern.slice(0, insertAt),
+      ...copiedBars.synth,
+      ...synthPattern.slice(insertAt),
+    ].slice(0, newLength);
+
+    const newDrums = drumPatterns.map((pattern, i) => [
+      ...pattern.slice(0, insertAt),
+      ...copiedBars.drums[i],
+      ...pattern.slice(insertAt),
+    ].slice(0, newLength));
+
+    setPatternLength(newLength);
+    setSynthPattern(newSynth);
+    setDrumPatterns(newDrums);
+    audioEngine.setPatternLength(newLength);
+    audioEngine.setSynthPattern(newSynth);
+    newDrums.forEach((p, i) => audioEngine.setDrumPattern(i, p));
+  };
+
+  // Clear selected bars
+  const handleClearBars = (bars: number[]) => {
+    let newSynth = [...synthPattern];
+    let newDrums = drumPatterns.map(p => [...p]);
+
+    for (const barIndex of bars) {
+      const start = barIndex * 16;
+      for (let i = 0; i < 16; i++) {
+        newSynth[start + i] = false;
+        newDrums.forEach(pattern => {
+          pattern[start + i] = false;
+        });
+      }
+    }
+
+    setSynthPattern(newSynth);
+    setDrumPatterns(newDrums);
+    audioEngine.setSynthPattern(newSynth);
+    newDrums.forEach((p, i) => audioEngine.setDrumPattern(i, p));
   };
 
   // Load saved pattern
@@ -343,14 +504,28 @@ function App() {
           />
         </section>
 
-        {/* Sequencer Grid */}
+        {/* Bar Overview & Sequencer Grid */}
         <section className="section sequencer-section">
           <h2 className="section-title">Sequencer</h2>
+          <BarOverview
+            patternLength={patternLength}
+            currentStep={currentStep}
+            selectedBars={selectedBars}
+            onPatternLengthChange={handlePatternLengthChange}
+            onBarSelect={handleBarSelect}
+            onInsertBar={handleInsertBar}
+            onDeleteBars={handleDeleteBars}
+            onCopyBars={handleCopyBars}
+            onPasteBars={handlePasteBars}
+            onClearBars={handleClearBars}
+            hasCopiedBars={copiedBars !== null}
+          />
           <Sequencer
             synthPattern={synthPattern}
             drumPatterns={drumPatterns}
             currentStep={currentStep}
             drumSounds={audioEngine.getDrumSounds()}
+            patternLength={patternLength}
             onSynthPatternChange={handleSynthPatternChange}
             onDrumPatternChange={handleDrumPatternChange}
           />

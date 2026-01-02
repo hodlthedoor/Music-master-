@@ -64,6 +64,7 @@ class AudioEngine {
   private lookahead = 25;
   private nextNoteTime = 0;
   private timerID: number | null = null;
+  private patternLength = 16; // Variable pattern length
 
   private synthPattern: boolean[] = new Array(16).fill(false);
   private synthNotes: number[] = new Array(16).fill(55); // MIDI notes per step
@@ -456,7 +457,7 @@ class AudioEngine {
   private advanceStep(): void {
     const secondsPerBeat = 60 / this.bpm;
     this.nextNoteTime += secondsPerBeat / 4; // 16th notes
-    this.currentStep = (this.currentStep + 1) % 16;
+    this.currentStep = (this.currentStep + 1) % this.patternLength;
   }
 
   // Public API
@@ -550,6 +551,27 @@ class AudioEngine {
 
   getSwing(): number {
     return this.swing;
+  }
+
+  // Pattern length (16, 32, 64, etc.)
+  setPatternLength(length: number): void {
+    const validLengths = [16, 32, 64, 128];
+    this.patternLength = validLengths.includes(length) ? length : 16;
+
+    // Extend patterns if needed
+    if (this.synthPattern.length < this.patternLength) {
+      this.synthPattern = [...this.synthPattern, ...new Array(this.patternLength - this.synthPattern.length).fill(false)];
+      this.synthNotes = [...this.synthNotes, ...new Array(this.patternLength - this.synthNotes.length).fill(55)];
+    }
+    for (let i = 0; i < this.drumPatterns.length; i++) {
+      if (this.drumPatterns[i].length < this.patternLength) {
+        this.drumPatterns[i] = [...this.drumPatterns[i], ...new Array(this.patternLength - this.drumPatterns[i].length).fill(false)];
+      }
+    }
+  }
+
+  getPatternLength(): number {
+    return this.patternLength;
   }
 
   // Apply a synth preset
