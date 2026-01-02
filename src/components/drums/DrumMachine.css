@@ -1,0 +1,326 @@
+.drum-machine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Drum Pads Section */
+.drum-pads-section {
+  padding: var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-lg);
+}
+
+.drum-pads-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.drum-pad-large {
+  aspect-ratio: 1;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background: linear-gradient(145deg, var(--color-surface), var(--color-bg-tertiary));
+  border-radius: var(--radius-lg);
+  border: 2px solid transparent;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.drum-pad-large::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--drum-color);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.drum-pad-large:hover {
+  border-color: var(--drum-color);
+  transform: scale(1.02);
+}
+
+.drum-pad-large:hover::before {
+  opacity: 0.1;
+}
+
+.drum-pad-large:active,
+.drum-pad-large.selected {
+  transform: scale(0.95);
+  border-color: var(--drum-color);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--drum-color) 50%, transparent);
+}
+
+.drum-pad-large:active::before,
+.drum-pad-large.selected::before {
+  opacity: 0.3;
+}
+
+.pad-icon {
+  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.pad-name-large {
+  font-size: 1rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.pad-key-large {
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  background: var(--color-bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+}
+
+/* Drum Sequencers */
+.drum-sequencers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.drum-lane {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  border-left: 3px solid var(--drum-color);
+  transition: all 0.2s ease;
+}
+
+.drum-lane.selected {
+  background: color-mix(in srgb, var(--drum-color) 10%, var(--color-bg-tertiary));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--drum-color) 20%, transparent);
+}
+
+.drum-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.drum-lane-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: transparent;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.drum-lane-label:hover {
+  background: var(--color-surface);
+  color: var(--drum-color);
+}
+
+.drum-lane-icon {
+  font-size: 1rem;
+}
+
+.drum-lane-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.lane-action-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-dim);
+  transition: all 0.15s ease;
+}
+
+.lane-action-btn:hover {
+  background: var(--drum-color);
+  color: var(--color-bg-primary);
+}
+
+.drum-lane-steps {
+  position: relative;
+}
+
+.beat-markers {
+  display: flex;
+  position: absolute;
+  top: -16px;
+  left: 0;
+  right: 0;
+}
+
+.beat-marker {
+  flex: 1;
+  text-align: center;
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 2px;
+}
+
+.beat-marker:first-child {
+  padding-left: 4px;
+}
+
+.drum-steps-row {
+  display: flex;
+  gap: 2px;
+  padding-top: var(--spacing-xs);
+}
+
+.drum-step {
+  flex: 1;
+  aspect-ratio: 1;
+  min-height: 32px;
+  max-height: 44px;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.1s ease;
+  touch-action: manipulation;
+}
+
+.drum-step.beat-start {
+  margin-left: 4px;
+}
+
+.drum-step.beat-start:first-child {
+  margin-left: 0;
+}
+
+.drum-step:hover {
+  background: color-mix(in srgb, var(--drum-color) 30%, var(--color-surface));
+  transform: scale(1.05);
+}
+
+.drum-step.active {
+  background: var(--drum-color);
+  box-shadow: 0 0 8px var(--drum-color);
+}
+
+.drum-step.current {
+  outline: 2px solid var(--color-text);
+  outline-offset: -2px;
+}
+
+.drum-step.current.active {
+  background: var(--color-text);
+  box-shadow: 0 0 12px var(--color-text);
+}
+
+.step-fill {
+  position: absolute;
+  inset: 20%;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+/* Quick Actions */
+.drum-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-surface);
+}
+
+.quick-action-btn {
+  flex: 1;
+  min-width: fit-content;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-dim);
+  transition: all 0.15s ease;
+}
+
+.quick-action-btn:hover {
+  background: var(--color-accent-secondary);
+  color: var(--color-bg-primary);
+}
+
+/* Responsive - Tablet and up */
+@media (min-width: 576px) {
+  .drum-pads-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .drum-pad-large {
+    min-height: 90px;
+  }
+}
+
+@media (min-width: 768px) {
+  .drum-machine {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .drum-pads-section {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .drum-sequencers {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .drum-quick-actions {
+    width: 100%;
+  }
+
+  .drum-step {
+    min-height: 36px;
+  }
+}
+
+@media (min-width: 992px) {
+  .drum-pads-grid {
+    gap: var(--spacing-lg);
+  }
+
+  .drum-pad-large {
+    min-height: 100px;
+  }
+
+  .pad-icon {
+    font-size: 2.5rem;
+  }
+
+  .pad-name-large {
+    font-size: 1.125rem;
+  }
+
+  .drum-step {
+    min-height: 40px;
+  }
+}

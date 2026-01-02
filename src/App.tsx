@@ -1,10 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { audioEngine } from './audio/AudioEngine';
+import { historyManager, AppState } from './state/HistoryManager';
+import { patternStorage, SavedPattern } from './state/PatternStorage';
+import { generatePattern, GeneratedPattern } from './utils/PatternGenerator';
 import Transport from './components/transport/Transport';
 import Sequencer from './components/sequencer/Sequencer';
 import Mixer from './components/mixer/Mixer';
 import SynthControls from './components/synth/SynthControls';
-import DrumPads from './components/drums/DrumPads';
+import DrumMachine from './components/drums/DrumMachine';
+import PatternGenerator from './components/patterns/PatternGenerator';
+import SectionArranger from './components/arranger/SectionArranger';
+import Toolbar from './components/toolbar/Toolbar';
 import './App.css';
 
 function App() {
@@ -15,6 +21,34 @@ function App() {
   const [levels, setLevels] = useState<number[]>([]);
   const [synthPattern, setSynthPattern] = useState<boolean[]>(new Array(16).fill(false));
   const [drumPatterns, setDrumPatterns] = useState<boolean[][]>([]);
+  const [synthNote, setSynthNote] = useState(55);
+
+  const isInitialLoad = useRef(true);
+  const lastSaveTime = useRef(0);
+
+  // Create current state snapshot
+  const getCurrentState = useCallback((): AppState => ({
+    synthPattern,
+    drumPatterns,
+    bpm,
+    synthNote,
+  }), [synthPattern, drumPatterns, bpm, synthNote]);
+
+  // Auto-save current pattern periodically
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const now = Date.now();
+    if (now - lastSaveTime.current < 2000) return; // Debounce
+
+    lastSaveTime.current = now;
+    patternStorage.saveCurrentPattern({
+      synthPattern,
+      drumPatterns,
+      bpm,
+      synthNote,
+    });
+  }, [synthPattern, drumPatterns, bpm, synthNote, isInitialized]);
 
   const initAudio = useCallback(async () => {
     if (isInitialized) return;
@@ -25,8 +59,33 @@ function App() {
     audioEngine.onStep((step) => setCurrentStep(step));
     audioEngine.onLevels((lvls) => setLevels(lvls));
 
-    setDrumPatterns(audioEngine.getDrumPatterns());
+    // Try to load saved pattern
+    const savedPattern = patternStorage.loadCurrentPattern();
+    if (savedPattern) {
+      setSynthPattern(savedPattern.synthPattern);
+      setDrumPatterns(savedPattern.drumPatterns);
+      setBpm(savedPattern.bpm);
+      setSynthNote(savedPattern.synthNote);
+      audioEngine.setSynthPattern(savedPattern.synthPattern);
+      savedPattern.drumPatterns.forEach((pattern, i) => {
+        audioEngine.setDrumPattern(i, pattern);
+      });
+      audioEngine.setBpm(savedPattern.bpm);
+      audioEngine.setSynthNote(savedPattern.synthNote);
+    } else {
+      setDrumPatterns(audioEngine.getDrumPatterns());
+    }
+
+    // Initialize history with current state
+    historyManager.initialize({
+      synthPattern: savedPattern?.synthPattern || new Array(16).fill(false),
+      drumPatterns: savedPattern?.drumPatterns || audioEngine.getDrumPatterns(),
+      bpm: savedPattern?.bpm || 120,
+      synthNote: savedPattern?.synthNote || 55,
+    });
+
     setIsInitialized(true);
+    isInitialLoad.current = false;
   }, [isInitialized]);
 
   useEffect(() => {
@@ -37,6 +96,29 @@ function App() {
     document.addEventListener('click', handleClick, { once: true });
     return () => document.removeEventListener('click', handleClick);
   }, [initAudio]);
+
+  // Keyboard shortcuts for transport
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isPlaying) {
+          handleStop();
+        } else {
+          handlePlay();
+        }
+      } else if (e.key.toLowerCase() === 't') {
+        audioEngine.triggerSynth();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying]);
 
   const handlePlay = async () => {
     await initAudio();
@@ -53,11 +135,25 @@ function App() {
   const handleBpmChange = (newBpm: number) => {
     setBpm(newBpm);
     audioEngine.setBpm(newBpm);
+
+    if (!isInitialLoad.current) {
+      historyManager.push(
+        { ...getCurrentState(), bpm: newBpm },
+        `Change BPM to ${newBpm}`
+      );
+    }
   };
 
   const handleSynthPatternChange = (pattern: boolean[]) => {
     setSynthPattern(pattern);
     audioEngine.setSynthPattern(pattern);
+
+    if (!isInitialLoad.current) {
+      historyManager.push(
+        { ...getCurrentState(), synthPattern: pattern },
+        'Edit synth pattern'
+      );
+    }
   };
 
   const handleDrumPatternChange = (drumIndex: number, pattern: boolean[]) => {
@@ -65,6 +161,130 @@ function App() {
     newPatterns[drumIndex] = pattern;
     setDrumPatterns(newPatterns);
     audioEngine.setDrumPattern(drumIndex, pattern);
+
+    if (!isInitialLoad.current) {
+      const drumNames = ['Kick', 'Snare', 'Hi-Hat', 'Clap'];
+      historyManager.push(
+        { ...getCurrentState(), drumPatterns: newPatterns },
+        `Edit ${drumNames[drumIndex]} pattern`
+      );
+    }
+  };
+
+  // Undo/Redo handlers
+  const handleUndo = () => {
+    const state = historyManager.undo();
+    if (state) {
+      applyState(state);
+    }
+  };
+
+  const handleRedo = () => {
+    const state = historyManager.redo();
+    if (state) {
+      applyState(state);
+    }
+  };
+
+  const applyState = (state: AppState) => {
+    isInitialLoad.current = true; // Prevent adding to history
+
+    setSynthPattern(state.synthPattern);
+    setDrumPatterns(state.drumPatterns);
+    setBpm(state.bpm);
+    setSynthNote(state.synthNote);
+
+    audioEngine.setSynthPattern(state.synthPattern);
+    state.drumPatterns.forEach((pattern, i) => {
+      audioEngine.setDrumPattern(i, pattern);
+    });
+    audioEngine.setBpm(state.bpm);
+    audioEngine.setSynthNote(state.synthNote);
+
+    setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 100);
+  };
+
+  // Pattern Generator handlers
+  const handleApplyPattern = (pattern: GeneratedPattern) => {
+    isInitialLoad.current = true;
+
+    setSynthPattern(pattern.synthPattern);
+    setDrumPatterns(pattern.drumPatterns);
+    setBpm(pattern.bpm);
+
+    audioEngine.setSynthPattern(pattern.synthPattern);
+    pattern.drumPatterns.forEach((p, i) => {
+      audioEngine.setDrumPattern(i, p);
+    });
+    audioEngine.setBpm(pattern.bpm);
+
+    setTimeout(() => {
+      isInitialLoad.current = false;
+      historyManager.push(
+        { ...getCurrentState(), synthPattern: pattern.synthPattern, drumPatterns: pattern.drumPatterns, bpm: pattern.bpm },
+        `Apply ${pattern.name} pattern`
+      );
+    }, 100);
+  };
+
+  const handleApplySynthOnly = (pattern: boolean[]) => {
+    handleSynthPatternChange(pattern);
+  };
+
+  const handleApplyDrumsOnly = (patterns: boolean[][]) => {
+    isInitialLoad.current = true;
+
+    setDrumPatterns(patterns);
+    patterns.forEach((p, i) => {
+      audioEngine.setDrumPattern(i, p);
+    });
+
+    setTimeout(() => {
+      isInitialLoad.current = false;
+      historyManager.push(
+        { ...getCurrentState(), drumPatterns: patterns },
+        'Apply drum patterns'
+      );
+    }, 100);
+  };
+
+  // Clear all patterns
+  const handleClearAll = () => {
+    const emptyPattern = new Array(16).fill(false);
+    const emptyDrums = drumPatterns.map(() => new Array(16).fill(false));
+
+    handleSynthPatternChange(emptyPattern);
+    emptyDrums.forEach((p, i) => {
+      handleDrumPatternChange(i, p);
+    });
+  };
+
+  // Randomize
+  const handleRandomize = () => {
+    const pattern = generatePattern('random');
+    handleApplyPattern(pattern);
+  };
+
+  // Load saved pattern
+  const handleLoadPattern = (pattern: SavedPattern) => {
+    handleApplyPattern({
+      name: pattern.name,
+      synthPattern: pattern.synthPattern,
+      drumPatterns: pattern.drumPatterns,
+      bpm: pattern.bpm,
+      description: 'Loaded from library',
+    });
+    setSynthNote(pattern.synthNote);
+    audioEngine.setSynthNote(pattern.synthNote);
+  };
+
+  // Play from section (placeholder for future implementation)
+  const handlePlaySection = (sectionIndex: number) => {
+    // In a full implementation, this would queue up sections
+    console.log('Play from section:', sectionIndex);
+    handlePlay();
   };
 
   return (
@@ -75,6 +295,18 @@ function App() {
       </header>
 
       <main className="app-main">
+        {/* Toolbar with Undo/Redo */}
+        <section className="section toolbar-section">
+          <Toolbar
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onClearAll={handleClearAll}
+            onRandomize={handleRandomize}
+            isPlaying={isPlaying}
+          />
+        </section>
+
+        {/* Transport Controls */}
         <section className="section transport-section">
           <Transport
             isPlaying={isPlaying}
@@ -85,6 +317,17 @@ function App() {
           />
         </section>
 
+        {/* Pattern Generator */}
+        <section className="section generator-section">
+          <PatternGenerator
+            onApplyPattern={handleApplyPattern}
+            onApplySynthOnly={handleApplySynthOnly}
+            onApplyDrumsOnly={handleApplyDrumsOnly}
+            currentDrumPatterns={drumPatterns}
+          />
+        </section>
+
+        {/* Sequencer Grid */}
         <section className="section sequencer-section">
           <h2 className="section-title">Sequencer</h2>
           <Sequencer
@@ -97,6 +340,7 @@ function App() {
           />
         </section>
 
+        {/* Synth and Drum Controls Row */}
         <div className="controls-row">
           <section className="section synth-section">
             <h2 className="section-title">Synthesizer</h2>
@@ -104,17 +348,38 @@ function App() {
           </section>
 
           <section className="section drums-section">
-            <h2 className="section-title">Drum Pads</h2>
-            <DrumPads drumSounds={audioEngine.getDrumSounds()} />
+            <h2 className="section-title">Drum Machine</h2>
+            <DrumMachine
+              drumPatterns={drumPatterns}
+              currentStep={currentStep}
+              drumSounds={audioEngine.getDrumSounds()}
+              onDrumPatternChange={handleDrumPatternChange}
+            />
           </section>
         </div>
 
+        {/* Pattern Library & Arranger */}
+        <section className="section arranger-section">
+          <SectionArranger
+            currentPattern={{
+              synthPattern,
+              drumPatterns,
+              bpm,
+              synthNote,
+            }}
+            onLoadPattern={handleLoadPattern}
+            onPlaySection={handlePlaySection}
+          />
+        </section>
+
+        {/* Mixer */}
         <section className="section mixer-section">
           <h2 className="section-title">Mixer</h2>
           <Mixer levels={levels} drumSounds={audioEngine.getDrumSounds()} />
         </section>
       </main>
 
+      {/* Audio Init Overlay */}
       {!isInitialized && (
         <div className="init-overlay">
           <div className="init-message">
