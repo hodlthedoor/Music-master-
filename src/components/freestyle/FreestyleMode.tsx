@@ -23,11 +23,10 @@ type FreestylePhase = 'idle' | 'playing' | 'buildup' | 'drop' | 'breakdown';
 function FreestyleMode({
   isPlaying,
   onPlay,
-  onStop: _onStop,
+  onStop,
   onApplyPattern,
   currentBpm,
 }: FreestyleModeProps) {
-  // Note: _onStop is available but we handle stop internally via stopFreestyle
   const [isActive, setIsActive] = useState(false);
   const [style, setStyle] = useState<TranceStyle>('hypnotic');
   const [intensity, setIntensity] = useState(0.3);
@@ -39,7 +38,18 @@ function FreestyleMode({
 
   const evolutionTimerRef = useRef<number | null>(null);
   const barCounterRef = useRef<number | null>(null);
-  const stepCountRef = useRef(0);
+
+  // Use refs to avoid stale closures in intervals
+  const currentPatternRef = useRef<GeneratedPattern | null>(null);
+  const intensityRef = useRef(intensity);
+  const phaseRef = useRef<FreestylePhase>('idle');
+  const styleRef = useRef<TranceStyle>(style);
+
+  // Keep refs in sync
+  useEffect(() => { currentPatternRef.current = currentPattern; }, [currentPattern]);
+  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+  useEffect(() => { styleRef.current = style; }, [style]);
 
   const styles = getTranceStyles();
 
@@ -56,42 +66,45 @@ function FreestyleMode({
     return pattern;
   }, [style, onApplyPattern]);
 
-  // Evolve the current pattern
+  // Evolve the current pattern - uses refs to avoid stale closures
   const evolveCurrentPattern = useCallback(() => {
-    if (!currentPattern) return;
+    const pattern = currentPatternRef.current;
+    if (!pattern) return;
 
     let evolved: GeneratedPattern;
+    const currentPhase = phaseRef.current;
+    const currentIntensity = intensityRef.current;
+    const currentStyle = styleRef.current;
 
     // Occasionally do special transitions
     const rand = Math.random();
-    if (rand < 0.1 && phase === 'playing') {
+    if (rand < 0.1 && currentPhase === 'playing') {
       // 10% chance of breakdown
-      evolved = createBreakdown(currentPattern);
+      evolved = createBreakdown(pattern);
       setPhase('breakdown');
-    } else if (rand < 0.15 && phase === 'breakdown') {
+    } else if (rand < 0.15 && currentPhase === 'breakdown') {
       // After breakdown, go to drop
-      evolved = createDrop(style);
+      evolved = createDrop(currentStyle);
       setPhase('drop');
-    } else if (phase === 'drop') {
+    } else if (currentPhase === 'drop') {
       // After drop, back to normal
-      evolved = evolvePattern(currentPattern, intensity);
+      evolved = evolvePattern(pattern, currentIntensity);
       setPhase('playing');
     } else {
       // Normal evolution
-      evolved = evolvePattern(currentPattern, intensity);
-      if (phase === 'breakdown') setPhase('playing');
+      evolved = evolvePattern(pattern, currentIntensity);
+      if (currentPhase === 'breakdown') setPhase('playing');
     }
 
     setCurrentPattern(evolved);
     onApplyPattern(evolved);
-  }, [currentPattern, intensity, phase, style, onApplyPattern]);
+  }, [onApplyPattern]);
 
   // Start freestyle mode
   const startFreestyle = useCallback(() => {
     setIsActive(true);
     setPhase('playing');
     setBarCount(0);
-    stepCountRef.current = 0;
 
     // Generate and apply initial pattern
     generateNewPattern();
@@ -115,7 +128,10 @@ function FreestyleMode({
       clearInterval(barCounterRef.current);
       barCounterRef.current = null;
     }
-  }, []);
+
+    // Stop the audio playback
+    onStop();
+  }, [onStop]);
 
   // Handle auto-evolution
   useEffect(() => {
