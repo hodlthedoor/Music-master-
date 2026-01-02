@@ -12,7 +12,7 @@ A browser-based synth loop and percussion beats application with a professional 
 
 ## Live Demo
 
-[https://music-master.vercel.app](https://music-master.vercel.app)
+[https://music-master-iota.vercel.app](https://music-master-iota.vercel.app)
 
 ## Quick Start
 

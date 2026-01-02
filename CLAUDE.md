@@ -7,7 +7,7 @@ This document provides guidance for AI assistants working on this codebase.
 **Repository:** Music-master-
 **Type:** Synth Loop & Percussion Beats UI Application
 **Platform:** Web-based (Browser), Responsive Design
-**Live Demo:** [Vercel Deployment](https://music-master.vercel.app)
+**Live Demo:** [Vercel Deployment](https://music-master-iota.vercel.app)
 
 A browser-based music creation application featuring synthesizer loops, percussion/drum beat sequencing, and a professional mixer interface. Users can create, layer, and arrange synth patterns alongside drum beats through an intuitive, responsive visual interface that works on desktop and mobile devices.
 
@@ -436,7 +436,7 @@ function updateMeter() {
 
 This project is deployed on [Vercel](https://vercel.com).
 
-**Live URL:** https://music-master.vercel.app
+**Live URL:** https://music-master-iota.vercel.app
 
 #### Vercel Configuration
 
