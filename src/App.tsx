@@ -10,6 +10,7 @@ import Mixer from './components/mixer/Mixer';
 import SynthControls from './components/synth/SynthControls';
 import DrumMachine from './components/drums/DrumMachine';
 import PatternGenerator from './components/patterns/PatternGenerator';
+import FreestyleMode from './components/freestyle/FreestyleMode';
 import SectionArranger from './components/arranger/SectionArranger';
 import Toolbar from './components/toolbar/Toolbar';
 import './App.css';
@@ -491,6 +492,17 @@ function App() {
             onPlay={handlePlay}
             onStop={handleStop}
             onBpmChange={handleBpmChange}
+          />
+        </section>
+
+        {/* Freestyle Mode - Live Auto-Generation */}
+        <section className="section freestyle-section">
+          <FreestyleMode
+            isPlaying={isPlaying}
+            onPlay={handlePlay}
+            onStop={handleStop}
+            onApplyPattern={handleApplyPattern}
+            currentBpm={bpm}
           />
         </section>
 
