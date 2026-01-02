@@ -7,6 +7,8 @@ import {
   mutatePattern,
   createFill,
 } from '../../utils/PatternGenerator';
+import { NOTE_NAMES } from '../../utils/MusicTheory';
+import { SYNTH_PRESETS } from '../../audio/SynthPresets';
 import './PatternGenerator.css';
 
 interface PatternGeneratorProps {
@@ -152,6 +154,25 @@ function PatternGenerator({
               </div>
 
               <p className="preview-description">{previewPattern.description}</p>
+
+              {/* Musical Info */}
+              <div className="pattern-info">
+                {previewPattern.key && (
+                  <span className="info-tag key">
+                    Key: {NOTE_NAMES[previewPattern.key.root]} {previewPattern.key.scale}
+                  </span>
+                )}
+                {previewPattern.synthPreset && SYNTH_PRESETS[previewPattern.synthPreset] && (
+                  <span className="info-tag preset">
+                    Sound: {SYNTH_PRESETS[previewPattern.synthPreset].name}
+                  </span>
+                )}
+                {previewPattern.swing !== undefined && previewPattern.swing > 0 && (
+                  <span className="info-tag swing">
+                    Swing: {Math.round(previewPattern.swing * 100)}%
+                  </span>
+                )}
+              </div>
 
               <div className="preview-patterns">
                 {renderPatternPreview(previewPattern.synthPattern, 'Synth', '#00d4ff')}

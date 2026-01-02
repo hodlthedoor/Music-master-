@@ -220,6 +220,17 @@ function App() {
     });
     audioEngine.setBpm(pattern.bpm);
 
+    // Apply new advanced features
+    if (pattern.synthNotes && pattern.synthNotes.length > 0) {
+      audioEngine.setSynthNotes(pattern.synthNotes);
+    }
+    if (pattern.swing !== undefined) {
+      audioEngine.setSwing(pattern.swing);
+    }
+    if (pattern.synthPreset) {
+      audioEngine.applySynthPreset(pattern.synthPreset);
+    }
+
     setTimeout(() => {
       isInitialLoad.current = false;
       historyManager.push(
@@ -269,12 +280,17 @@ function App() {
 
   // Load saved pattern
   const handleLoadPattern = (pattern: SavedPattern) => {
+    // Create default synthNotes array based on the saved synthNote
+    const defaultSynthNotes = new Array(16).fill(pattern.synthNote);
+
     handleApplyPattern({
       name: pattern.name,
       synthPattern: pattern.synthPattern,
       drumPatterns: pattern.drumPatterns,
+      synthNotes: defaultSynthNotes,
       bpm: pattern.bpm,
       description: 'Loaded from library',
+      key: { root: pattern.synthNote % 12, scale: 'major' as const },
     });
     setSynthNote(pattern.synthNote);
     audioEngine.setSynthNote(pattern.synthNote);
