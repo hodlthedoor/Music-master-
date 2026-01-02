@@ -50,9 +50,28 @@
   margin-bottom: var(--spacing-md);
 }
 
+.toolbar-section {
+  background: transparent;
+  padding: 0;
+}
+
 .transport-section {
   background: transparent;
   padding: 0;
+}
+
+.generator-section {
+  background: transparent;
+  padding: 0;
+}
+
+.arranger-section {
+  background: transparent;
+  padding: 0;
+}
+
+.drums-section {
+  min-width: 0;
 }
 
 .controls-row {
