@@ -503,6 +503,7 @@ function App() {
             onStop={handleStop}
             onApplyPattern={handleApplyPattern}
             currentBpm={bpm}
+            patternLength={patternLength}
           />
         </section>
 

@@ -8,6 +8,39 @@ const TRANCE_ROOTS = [0, 5, 7, 10];
 // Trance sub-genres
 export type TranceStyle = 'hypnotic' | 'uplifting' | 'dark' | 'progressive' | 'psytrance';
 
+// Helper to tile a 16-step pattern to fill the target length
+function tilePattern<T>(basePattern: T[], targetLength: number): T[] {
+  if (targetLength <= basePattern.length) {
+    return basePattern.slice(0, targetLength);
+  }
+  const result: T[] = [];
+  while (result.length < targetLength) {
+    result.push(...basePattern);
+  }
+  return result.slice(0, targetLength);
+}
+
+// Helper to add subtle variations when tiling for more interest
+function tileWithVariation(basePattern: boolean[], targetLength: number, variationChance: number = 0.1): boolean[] {
+  if (targetLength <= basePattern.length) {
+    return basePattern.slice(0, targetLength);
+  }
+  const result: boolean[] = [];
+  const bars = Math.ceil(targetLength / 16);
+
+  for (let bar = 0; bar < bars; bar++) {
+    for (let step = 0; step < 16 && result.length < targetLength; step++) {
+      let value = basePattern[step];
+      // Add subtle variation on non-first bars
+      if (bar > 0 && Math.random() < variationChance) {
+        value = !value;
+      }
+      result.push(value);
+    }
+  }
+  return result;
+}
+
 // BPM ranges for trance styles
 const TRANCE_BPM: Record<TranceStyle, [number, number]> = {
   hypnotic: [130, 138],
@@ -74,7 +107,8 @@ function generateTranceArp(
   style: TranceStyle,
   root: number,
   scale: ScaleType,
-  octave: number = 3
+  octave: number = 3,
+  patternLength: number = 16
 ): { pattern: boolean[]; notes: number[] } {
   const scaleNotes = getScaleNotes(root, scale, octave);
 
@@ -97,37 +131,50 @@ function generateTranceArp(
       arpPattern = randomChoice([TRANCE_ARPS.rolling, TRANCE_ARPS.gated]);
   }
 
-  const pattern: boolean[] = [];
-  const notes: number[] = [];
+  // Generate base 16-step pattern
+  const basePattern: boolean[] = [];
+  const baseNotes: number[] = [];
 
   for (let i = 0; i < 16; i++) {
     const interval = arpPattern[i];
     if (interval === -1) {
       // Rest
-      pattern.push(false);
-      notes.push(0);
+      basePattern.push(false);
+      baseNotes.push(0);
     } else {
-      pattern.push(true);
+      basePattern.push(true);
       // Map interval to scale note
       const baseNote = scaleNotes[0] + interval;
-      notes.push(baseNote);
+      baseNotes.push(baseNote);
     }
   }
+
+  // Tile to target length with variation
+  const pattern = tileWithVariation(basePattern, patternLength, 0.05);
+  const notes = tilePattern(baseNotes, patternLength);
 
   return { pattern, notes };
 }
 
 // Generate drums from probabilities
-function generateTranceDrums(style: TranceStyle, variation: number = 0.1): boolean[][] {
+function generateTranceDrums(style: TranceStyle, patternLength: number = 16, variation: number = 0.1): boolean[][] {
   const applyVariation = (probs: number[]) =>
     probs.map(p => (Math.random() < p + (Math.random() - 0.5) * variation ? true : false));
 
-  return [
+  // Generate base 16-step patterns
+  const baseDrums = [
     applyVariation(TRANCE_DRUMS.kick[style]),
     applyVariation(TRANCE_DRUMS.snare[style]),
     applyVariation(TRANCE_DRUMS.hihat[style]),
     applyVariation(TRANCE_DRUMS.clap[style]),
   ];
+
+  // Tile to target length with slight variations
+  return baseDrums.map((drumPattern, drumIndex) => {
+    // Keep kick rock solid, add variation to others
+    const variationChance = drumIndex === 0 ? 0 : 0.08;
+    return tileWithVariation(drumPattern, patternLength, variationChance);
+  });
 }
 
 // Preset recommendations per style
@@ -140,7 +187,7 @@ const TRANCE_PRESETS: Record<TranceStyle, string[]> = {
 };
 
 // Main trance pattern generator
-export function generateTrancePattern(style: TranceStyle = 'hypnotic'): GeneratedPattern {
+export function generateTrancePattern(style: TranceStyle = 'hypnotic', patternLength: number = 16): GeneratedPattern {
   const root = randomChoice(TRANCE_ROOTS);
   const scale = style === 'uplifting'
     ? randomChoice(['harmonicMinor', 'major'] as ScaleType[])
@@ -150,8 +197,8 @@ export function generateTrancePattern(style: TranceStyle = 'hypnotic'): Generate
   const bpm = randomInt(minBpm, maxBpm);
 
   const octave = style === 'dark' ? 2 : style === 'uplifting' ? 4 : 3;
-  const { pattern: synthPattern, notes: synthNotes } = generateTranceArp(style, root, scale, octave);
-  const drumPatterns = generateTranceDrums(style);
+  const { pattern: synthPattern, notes: synthNotes } = generateTranceArp(style, root, scale, octave, patternLength);
+  const drumPatterns = generateTranceDrums(style, patternLength);
 
   const presetName = randomChoice(TRANCE_PRESETS[style]);
 
@@ -269,8 +316,8 @@ export function createBuildUp(
 }
 
 // Drop generator (full energy)
-export function createDrop(style: TranceStyle = 'hypnotic'): GeneratedPattern {
-  const drop = generateTrancePattern(style);
+export function createDrop(style: TranceStyle = 'hypnotic', patternLength: number = 16): GeneratedPattern {
+  const drop = generateTrancePattern(style, patternLength);
 
   // Make everything more intense
   drop.synthPattern = drop.synthPattern.map((step, i) => step || i % 2 === 0);
@@ -285,16 +332,17 @@ export function createBreakdown(
   current: GeneratedPattern
 ): GeneratedPattern {
   const breakdown = { ...current };
+  const patternLength = current.synthPattern.length;
 
-  // Remove kick and most drums
+  // Remove kick and most drums - use current pattern's length
   breakdown.drumPatterns = [
-    new Array(16).fill(false), // No kick
-    current.drumPatterns[1].map((s, i) => i === 4 || i === 12 ? s : false), // Minimal snare
+    new Array(patternLength).fill(false), // No kick
+    current.drumPatterns[1].map((s, i) => (i % 16 === 4 || i % 16 === 12) ? s : false), // Minimal snare
     current.drumPatterns[2].map((_s, i) => i % 4 === 2), // Sparse hi-hats
-    new Array(16).fill(false), // No clap
+    new Array(patternLength).fill(false), // No clap
   ];
 
-  // Sparse synth
+  // Sparse synth - hit on every 8 steps
   breakdown.synthPattern = current.synthPattern.map((_s, i) => i % 8 === 0);
   breakdown.synthNotes = current.synthNotes.map((n, i) => i % 8 === 0 ? n : 0);
 

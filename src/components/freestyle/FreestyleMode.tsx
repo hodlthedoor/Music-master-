@@ -16,6 +16,7 @@ interface FreestyleModeProps {
   onStop: () => void;
   onApplyPattern: (pattern: GeneratedPattern) => void;
   currentBpm: number;
+  patternLength: number;
 }
 
 type FreestylePhase = 'idle' | 'playing' | 'buildup' | 'drop' | 'breakdown';
@@ -26,6 +27,7 @@ function FreestyleMode({
   onStop,
   onApplyPattern,
   currentBpm,
+  patternLength,
 }: FreestyleModeProps) {
   const [isActive, setIsActive] = useState(false);
   const [style, setStyle] = useState<TranceStyle>('hypnotic');
@@ -44,12 +46,14 @@ function FreestyleMode({
   const intensityRef = useRef(intensity);
   const phaseRef = useRef<FreestylePhase>('idle');
   const styleRef = useRef<TranceStyle>(style);
+  const patternLengthRef = useRef(patternLength);
 
   // Keep refs in sync
   useEffect(() => { currentPatternRef.current = currentPattern; }, [currentPattern]);
   useEffect(() => { intensityRef.current = intensity; }, [intensity]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { styleRef.current = style; }, [style]);
+  useEffect(() => { patternLengthRef.current = patternLength; }, [patternLength]);
 
   const styles = getTranceStyles();
 
@@ -60,11 +64,11 @@ function FreestyleMode({
 
   // Generate initial pattern
   const generateNewPattern = useCallback(() => {
-    const pattern = generateTrancePattern(style);
+    const pattern = generateTrancePattern(style, patternLength);
     setCurrentPattern(pattern);
     onApplyPattern(pattern);
     return pattern;
-  }, [style, onApplyPattern]);
+  }, [style, patternLength, onApplyPattern]);
 
   // Evolve the current pattern - uses refs to avoid stale closures
   const evolveCurrentPattern = useCallback(() => {
@@ -75,6 +79,7 @@ function FreestyleMode({
     const currentPhase = phaseRef.current;
     const currentIntensity = intensityRef.current;
     const currentStyle = styleRef.current;
+    const currentPatternLength = patternLengthRef.current;
 
     // Occasionally do special transitions
     const rand = Math.random();
@@ -84,7 +89,7 @@ function FreestyleMode({
       setPhase('breakdown');
     } else if (rand < 0.15 && currentPhase === 'breakdown') {
       // After breakdown, go to drop
-      evolved = createDrop(currentStyle);
+      evolved = createDrop(currentStyle, currentPatternLength);
       setPhase('drop');
     } else if (currentPhase === 'drop') {
       // After drop, back to normal
@@ -184,7 +189,7 @@ function FreestyleMode({
   // Manual triggers
   const triggerDrop = () => {
     if (!isActive) return;
-    const drop = createDrop(style);
+    const drop = createDrop(style, patternLength);
     setCurrentPattern(drop);
     onApplyPattern(drop);
     setPhase('drop');
