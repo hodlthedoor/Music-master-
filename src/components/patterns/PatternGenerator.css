@@ -195,6 +195,37 @@
   color: var(--color-text-dim);
 }
 
+/* Pattern Info Tags */
+.pattern-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.info-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-tag.key {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.info-tag.preset {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+}
+
+.info-tag.swing {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: #1a1a2e;
+}
+
 .preview-patterns {
   display: flex;
   flex-direction: column;
